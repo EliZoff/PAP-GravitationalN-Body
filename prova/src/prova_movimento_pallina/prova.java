@@ -7,7 +7,7 @@
  * For a commercial use license, or to purchase the book (recommended),
  * visit http://www.davidflanagan.com/javaexamples2.
  */
-package prova;
+package prova_movimento_pallina;
 
 import java.applet.Applet;
 import java.awt.Color;

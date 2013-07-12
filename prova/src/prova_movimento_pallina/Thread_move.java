@@ -1,4 +1,4 @@
-package prova;
+package prova_movimento_pallina;
 
 import javax.swing.*;
 
