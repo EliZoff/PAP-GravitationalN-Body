@@ -14,15 +14,22 @@ public class Thread_move extends Thread{
 	
 	public void run(){
 		JOptionPane message=new JOptionPane();
+		int incY=30;
+		int incX=20;
 		while(true){
-			p.incY(10);
+			p.incY(incY);
+			p.incX(incX);
 			f.repaint();
-			if(p.checkCollisions()==3){
-				message.showMessageDialog(f, "Collisione!!!!", "Collisione",message.WARNING_MESSAGE);
-				break;
+			if(p.checkCollisionsY()){
+				incY=incY*(-1);
 			}
+			if(p.checkCollisionsX()){
+				incX=incX*(-1);
+			}
+			
+			
 			try {
-				Thread.sleep(300);
+				Thread.sleep(50);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
