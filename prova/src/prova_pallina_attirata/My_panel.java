@@ -36,6 +36,20 @@ public class My_panel extends JPanel {
     	result=Math.sqrt(Math.pow((this.y2-this.y1), 2));
     	return result;
     }
+    public void inc(int xinc, int yinc){
+    	
+    	if(calcDist()>=(r1+r2)) {
+    		this.x1+=xinc;
+    		this.y1+=yinc;
+    	}else{
+    		//this.x1+=calcDistX()-(compX1+compX2);
+    		/*if(x1 + 30 + xinc > b.width){
+    			this.x1+=(b.width-x1)-30;
+    		}else{
+    			this.x1-=x1-30;
+    		}*/
+    	}
+    }
 
     public void incX(int xinc){
     	Rectangle b = this.getBounds();
@@ -83,12 +97,6 @@ public class My_panel extends JPanel {
     
     public boolean checkCollisions() {
     	Rectangle b = this.getBounds();
-    	double angolo, compY1, compY2, compX1, compX2;
-    	angolo=calcDistY()/calcDistX();
-    	compY1=r1*Math.sin(angolo);
-    	compY2=r2*Math.sin(angolo);
-    	compX1=r1*Math.cos(angolo);
-    	compX2=r2*Math.cos(angolo);
         /*if((x - 40 + 10)< 0) {
             return 0;
         }
@@ -102,7 +110,7 @@ public class My_panel extends JPanel {
         x + 30 >= b.width) {
         */ 
     	
-        if(calcDistY()==(compY1+compY2)||calcDistX()==(compX1+compX2)){//????
+        if(calcDist()==(r1+r2)){//????
             return true;
         }
         else {
