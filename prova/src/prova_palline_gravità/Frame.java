@@ -1,4 +1,4 @@
-package prova_pallina_attirata;
+package prova_palline_gravità;
 
 import java.awt.*;
 import javax.swing.*;

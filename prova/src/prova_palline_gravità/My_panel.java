@@ -1,4 +1,4 @@
-package prova_pallina_attirata;
+package prova_palline_gravità;
 
 import java.awt.*;
 
@@ -9,7 +9,7 @@ public class My_panel extends JPanel {
     static int y1 = 30;
     static int x2 = 350;
     static int y2 = 350;
-    int r1=30,r2=50;
+    int r1=30,r2=30;
     JFrame f;
     public My_panel(){
     	super();
@@ -36,14 +36,10 @@ public class My_panel extends JPanel {
     	result=Math.sqrt(Math.pow((y2c-y1c), 2));
     	return result;
     }
-    public void inc(int xinc, int yinc){
+    public void incP1(int xinc, int yinc){
     	double c, b, t;
     	double distR, b1, c1;
-    	double prova;
-    	prova = Math.atan2(Math.sqrt(3), 3);
     	if(calcDist(this.x1+ xinc, this.y1 + yinc, this.x2, this.y2)>(r1+r2)) {
-    		
-    		
     		this.x1+=xinc;
     		this.y1+=yinc;
     	}else{
@@ -58,6 +54,23 @@ public class My_panel extends JPanel {
     	}
     }
 
+    public void incP2(int xinc, int yinc){
+    	double c, b, t;
+    	double distR, b1, c1;
+    	if(calcDist(this.x1, this.y1, this.x2 + xinc, this.y2 + yinc)>(r1+r2)) {
+    		this.x2+=xinc;
+    		this.y2+=yinc;
+    	}else{
+    		c = calcDistX(this.x1, this.x2);
+    		b = calcDistY(this.y1, this.y2);
+    		t = Math.atan2(c, b);
+    		distR=calcDist(this.x1, this.y1, this.x2, this.y2) - (r1+r2);
+    		c1 = distR*Math.sin(t);
+    		b1= distR*Math.cos(t);
+    		this.x2-=c1;
+    		this.y2-=b1;
+    	}
+    }
     public void incX(int xinc){
     	Rectangle b = this.getBounds();
     	
