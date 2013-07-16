@@ -20,74 +20,77 @@ public class My_panel extends JPanel {
     	g.setColor(Color.BLACK);
     	g.fillOval(x2-r2, y2-r2, r2*2, r2*2);
     }
-    public double calcDist(){
+    public double calcDist(int x1c, int y1c, int y2c, int x2c){
     	double result;
-    	result=Math.sqrt(Math.pow((this.x2-this.x1), 2) + Math.pow((this.y2-this.y1), 2));
+    	result=Math.sqrt(Math.pow((x2c-x1c), 2) + Math.pow((y2c-y1c), 2));
     	return result;
     }
     
-    public double calcDistX(){
+    public double calcDistX(int x1c, int x2c){
     	double result;
-    	result=Math.sqrt(Math.pow((this.x2-this.x1), 2));
+    	result=Math.sqrt(Math.pow((x2c-x1c), 2));
     	return result;
     }
-    public double calcDistY(){
+    public double calcDistY(int y1c, int y2c){
     	double result;
-    	result=Math.sqrt(Math.pow((this.y2-this.y1), 2));
+    	result=Math.sqrt(Math.pow((y2c-y1c), 2));
     	return result;
     }
     public void inc(int xinc, int yinc){
-    	
-    	if(calcDist()>=(r1+r2)) {
+    	double c, b, t;
+    	double distR, b1, c1;
+    	double prova;
+    	prova = Math.atan2(Math.sqrt(3), 3);
+    	if(calcDist(this.x1+ xinc, this.y1 + yinc, this.x2, this.y2)>(r1+r2)) {
+    		System.out.println(calcDist(this.x1+ xinc, this.y1 + yinc, this.x2, this.y2));
+    		
     		this.x1+=xinc;
     		this.y1+=yinc;
     	}else{
+    		c = calcDistX(this.x1, this.x2);
+    		b = calcDistY(this.y1, this.y2);
+    		t = Math.atan2(c, b);
+    		distR=calcDist(this.x1, this.y1, this.x2, this.y2) - (r1+r2);
+    		c1 = distR*Math.sin(t);
+    		b1= distR*Math.cos(t);
+    		this.x1+=c1;
+    		this.y1+=b1;
+    	}
+    }
+
+    public void incX(int xinc){
+    	Rectangle b = this.getBounds();
+    	
+    	//if(calcDistX()-(compX1+compX2)>=xinc) {
+    		//this.x1+=xinc;
+    	//}else{
     		//this.x1+=calcDistX()-(compX1+compX2);
     		/*if(x1 + 30 + xinc > b.width){
     			this.x1+=(b.width-x1)-30;
     		}else{
     			this.x1-=x1-30;
     		}*/
-    	}
-    }
-
-    public void incX(int xinc){
-    	Rectangle b = this.getBounds();
-    	double angolo, compX1, compX2;
-    	angolo=calcDistY()/calcDistX();
-    	compX1=r1*Math.cos(angolo);
-    	compX2=r2*Math.cos(angolo);
-    	System.out.println("X: "+(calcDistY()-(compX1+compX2)));
-    	if(calcDistX()-(compX1+compX2)>=xinc) {
-    		this.x1+=xinc;
-    	}else{
-    		this.x1+=calcDistX()-(compX1+compX2);
-    		/*if(x1 + 30 + xinc > b.width){
-    			this.x1+=(b.width-x1)-30;
-    		}else{
-    			this.x1-=x1-30;
-    		}*/
-    	}
+    	//}
     }
     public void incY(int yinc){
     	Rectangle b = this.getBounds();
-    	double angolo, compY1, compY2;
-    	angolo=calcDistY()/calcDistX();
-    	compY1=r1*Math.sin(angolo);
-    	compY2=r2*Math.sin(angolo);
-    	System.out.println("Y: "+(calcDistY()-(compY1+compY2)));
-    	if(calcDist()-(compY1+compY2)>=yinc) {
-    		this.y1+=yinc;
-    	}else{
+    	//double angolo, compY1, compY2;
+    	//angolo=calcDistY()/calcDistX();
+    	//compY1=r1*Math.sin(angolo);
+    	//compY2=r2*Math.sin(angolo);
+    	//System.out.println("Y: "+(calcDistY()-(compY1+compY2)));
+    	//if(calcDist(this.x1, this.y1, this.x2, this.y2)-(compY1+compY2)>=yinc) {
+    		//this.y1+=yinc;
+    	//}else{
     		
-    		this.y1+=calcDistY()-(compY1+compY2);
+    		//this.y1+=calcDistY()-(compY1+compY2);
     		/*if(y1 + 30 + yinc > b.height){
     			this.y1+=(b.height-y1)-30;
     		}else{
     			this.y1-=y1-30;
     		}*/
     			
-    	}
+    	//}
     	
     }
     
@@ -97,20 +100,8 @@ public class My_panel extends JPanel {
     
     public boolean checkCollisions() {
     	Rectangle b = this.getBounds();
-        /*if((x - 40 + 10)< 0) {
-            return 0;
-        }
-        else if(y - 40 + 10< 0) {
-            return 1;
-        }
-        else if(x + 40 +10 > b.width) {//???
-            return 2;
-        }
-        else
-        x + 30 >= b.width) {
-        */ 
     	
-        if(calcDist()==(r1+r2)){//????
+        if(calcDist(this.x1, this.y1, this.x2, this.y2)==(r1+r2)){//????
             return true;
         }
         else {
