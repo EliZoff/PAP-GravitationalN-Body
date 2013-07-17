@@ -1,26 +1,157 @@
 package prova_palline_gravità;
 
+import java.awt.Rectangle;
+import java.util.*;
+
 import javax.swing.*;
 
 public class Thread_move extends Thread{
-	
-	JFrame f;
-	My_panel p;
+	static final double G = 6.67E-11;
+	private JFrame f;
+	private My_panel p;
+	private ArrayList<Planet> planets = new ArrayList<Planet>();
 	
 	public Thread_move(JFrame f, My_panel p){
 		this.p=p;
 		this.f=f;
 	}
 	
+	public double calcDist(int x1c, int y1c, int x2c, int y2c){
+    	//calcola la distanza tra due punti attraverso il teorema di pitagora
+    	double result;
+    	result=Math.sqrt(Math.pow((x2c-x1c), 2) + Math.pow((y2c-y1c), 2));
+    	return result;
+    }
+	public double calcDistX(int x1c, int x2c){
+    	//calcola la distanza tra le coordinate x di due punti
+    	double result;
+    	result=Math.sqrt(Math.pow((x2c-x1c), 2));
+    	return result;
+    }
+    public double calcDistY(int y1c, int y2c){
+    	//calcola la distanza tra le coordinate y di due punti
+    	double result;
+    	result=Math.sqrt(Math.pow((y2c-y1c), 2));
+    	return result;
+    }
+    
+    /*public boolean checkCollisions() {
+    	Rectangle b = this.getBounds();
+        if(calcDist(this.x1, this.y1, this.x2, this.y2)<=(r1+r2)+1){
+        	//+1 perchè essendo le coordinate int e la distanza double potrebbe rimanere uno spazio tra le figure che al max può essere 1
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    
+    
+    public void incP1(int xinc, int yinc){
+    	//incrementa le coordinate della prima palla
+    	double c, b, t;
+    	double distR, b1, c1;
+    	//se la distanza tra i centri delle 2 considerando l'incremento da fare è > della somma dei due raggi
+    	if(calcDist(this.x1+ xinc, this.y1 + yinc, this.x2, this.y2)>(r1+r2)) {
+    		//posso eseguire l'incremento senza sovrapposizioni tra le due
+    		this.x1+=xinc;
+    		this.y1+=yinc;
+    	}else{
+    		//altrimenti calcolo le componenti x e y della distanza rimanente in modo da far collidere le figure
+    		c = calcDistX(this.x1, this.x2);
+    		b = calcDistY(this.y1, this.y2);
+    		t = Math.atan2(c, b);
+    		distR=calcDist(this.x1, this.y1, this.x2, this.y2) - (r1+r2);
+    		c1 = distR*Math.sin(t);
+    		b1= distR*Math.cos(t);
+    		this.x1+=c1;
+    		this.y1+=b1;
+    	}
+    }*/
+
+	public void genPlanets(int nPl, double[] m, int[] r){
+		//genera l'insieme di nPl pianeti di massa m e raggio r
+		Rectangle b = p.getBounds();
+		Random rn = new Random(System.nanoTime());
+		boolean flagOk=false, flagColl = false;
+		for(int i=0; i<nPl; i++){
+			flagOk=false;
+			Planet pl = new Planet(0,0,m[i],r[i]);
+			//genero casualmente le coordinare del centro della prima palla
+	    	
+	    	//se le coordinate genetate posizionano la palla oltre il bordo del panel le rigenero
+	    	while(!flagOk)
+	    	{
+	    		pl.setX(rn.nextInt(b.width));
+		    	pl.setY(rn.nextInt(b.height));
+	    		//flag controllo collisioni
+		    	flagColl = false;
+	    		//controllo tutta la lista dei pianeti per verificare che le coordinate appena generate evitino collisioni
+	    		for(Planet x:planets)
+	    		{
+	    			if((calcDist(pl.getX(), pl.getY(), x.getX(), x.getY())<=(pl.getR()+x.getR())+1))
+	    			{
+	    				flagColl=true;
+	    			}
+	    		}
+	    		//controllo che il pianeta sia dentro lo schermo
+	    		if((pl.getX() +pl.getR() < b.width && pl.getX()-pl.getR()>0)&&
+	    			(pl.getY() +pl.getR() < b.height && pl.getY()-pl.getR()>0) && !flagColl)
+	    		{
+	    			flagOk=true;
+	    		}
+	    		
+	    	}
+	    	planets.add(pl);
+		}
+		
+    	//f.repaint();
+    	
+    }
+	
+	public double calcFg(double m1, double m2, double dist){
+		double f;
+		f=(G*m1*m2)/(dist*dist);
+		return f;
+		
+	}
+	
 	public void run(){
 		JOptionPane message=new JOptionPane();
 		int incY=10;
 		int incX=10;
-		p.genBalls();
+		int[] rg = {20,70,5,30,45,5,15,80,25,10};
+		double[] ms = {6,80,20,50,35,6,80,20,50,35};
+		Force[][] force;
+		int i=0,k=0;
+		genPlanets(2, ms, rg);
+		My_panel newP = new My_panel(planets);
+		f.remove(p);
+		f.add(newP);
+		f.validate();
+		f.repaint();
+		force = new Force[planets.size()][];
+		//calcolo la forza tra tutti i pianeti
+		for(Planet pl:planets){
+			force[i]=new Force[planets.size()-1];
+			k=0;
+			for(Planet plo:planets){
+				if(!pl.equals(plo)){
+					//tranne che per me stesso
+					force[i][k] = new Force(calcFg(pl.getM(), plo.getM(), calcDist(pl.getX(), pl.getY(), plo.getX(), plo.getY())));
+					force[i][k].findDirX(pl.getX(), plo.getX());
+					force[i][k].findDirY(pl.getY(), plo.getY());
+				    k++;
+				}
+			}
+			i++;
+		}
+		System.out.println("break");
 		/*System.out.println(p.calcDist());
 		System.out.println(p.calcDistX());
 		System.out.println(p.calcDistY());*/
-		while(true){
+		/*while(true){
 			//p.incP1(incY, incX);
 			//p.incP2(-incX, -incY);
 			
@@ -36,7 +167,7 @@ public class Thread_move extends Thread{
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		}
+		}*/
 	}
 
 }

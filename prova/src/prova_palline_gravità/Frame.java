@@ -20,7 +20,6 @@ public class Frame extends JFrame{
 
 	public static void main(String[] args) {
 		Frame f=new Frame();
-		f.getP().setFrame(f);
 		Thread_move th=new Thread_move(f, f.getP());
 		f.setVisible(true);
 		th.start();
