@@ -20,7 +20,7 @@ public class My_panel extends JPanel {
     	g.setColor(Color.BLACK);
     	g.fillOval(x2-r2, y2-r2, r2*2, r2*2);
     }
-    public double calcDist(int x1c, int y1c, int y2c, int x2c){
+    public double calcDist(int x1c, int y1c, int x2c, int y2c){
     	double result;
     	result=Math.sqrt(Math.pow((x2c-x1c), 2) + Math.pow((y2c-y1c), 2));
     	return result;
@@ -39,11 +39,7 @@ public class My_panel extends JPanel {
     public void inc(int xinc, int yinc){
     	double c, b, t;
     	double distR, b1, c1;
-    	double prova;
-    	prova = Math.atan2(Math.sqrt(3), 3);
     	if(calcDist(this.x1+ xinc, this.y1 + yinc, this.x2, this.y2)>(r1+r2)) {
-    		
-    		
     		this.x1+=xinc;
     		this.y1+=yinc;
     	}else{
@@ -100,7 +96,6 @@ public class My_panel extends JPanel {
     
     public boolean checkCollisions() {
     	Rectangle b = this.getBounds();
-    	System.out.println(calcDist(this.x1, this.y1, this.x2, this.y2));
         if(calcDist(this.x1, this.y1, this.x2, this.y2)<=(r1+r2)+1){//????
             return true;
         }
