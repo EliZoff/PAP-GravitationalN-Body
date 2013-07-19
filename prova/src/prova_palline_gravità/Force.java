@@ -1,8 +1,8 @@
 package prova_palline_gravità;
 
 public class Force {
-	double val;
-	String dirX, dirY;
+	private double val;
+	private String dirX, dirY;
 	public Force(double val){
 		this.val=val;
 	}
@@ -26,6 +26,15 @@ public class Force {
 		}else{
 			this.dirY="+";
 		}
+	}
+	public double getValue(){
+		return val;
+	}
+	public String getDirX(){
+		return dirX;
+	}
+	public String getDirY(){
+		return dirY;
 	}
 	
 }

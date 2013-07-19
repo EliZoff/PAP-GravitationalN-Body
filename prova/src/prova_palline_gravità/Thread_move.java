@@ -117,36 +117,122 @@ public class Thread_move extends Thread{
 		
 	}
 	
+	public double calcAcc(double f, double m){
+		return f/m;
+		
+	}
+	public double calcVel(double vi, double dt, double a){
+		double v = vi + a*dt;
+		return v;
+	}
+	
+	public double calcdP(double vi, double dt, double a){
+		double p = vi*dt + (0.5)*a*(dt*dt);
+		return p;
+	}
+	
 	public void run(){
 		JOptionPane message=new JOptionPane();
 		int incY=10;
 		int incX=10;
-		int[] rg = {20,70,5,30,45,5,15,80,25,10};
-		double[] ms = {6,80,20,50,35,6,80,20,50,35};
-		Force[][] force;
-		int i=0,k=0;
-		genPlanets(2, ms, rg);
-		My_panel newP = new My_panel(planets);
+		int dt=50; //delta time
+		double a; // accelerazione
+		double vi=0, vf; // velocità iniziale e finale
+		double pi, dp; // posizione iniziale e spostamento
+		int[] rg = {20,70,5,30,45,5,15,80,25,10}; //array di raggi
+		double c, b, c1, b1, t; //cateti e angolo acuto
+		double[] ms = {5.97E10,6.39E11,20,50,35,6,80,20,50,35}; //array di masse
+		My_panel newP;
+		Force[] force; // array di forze
+		int k=0;
+		boolean collision=false; //flag collisioni
+		String direction; //direzione della forza
+		genPlanets(2, ms, rg); //generazione coordinate casuali dei pianeti
+		newP = new My_panel(planets); //nuovo JPanel
+		//rimuovo e aggiungo il panel per disegnare i nuovi pianeti 
 		f.remove(p);
 		f.add(newP);
 		f.validate();
 		f.repaint();
-		force = new Force[planets.size()][];
-		//calcolo la forza tra tutti i pianeti
+		//calcolo la forza iniziale tra tutti i pianeti
 		for(Planet pl:planets){
-			force[i]=new Force[planets.size()-1];
+			force = new Force[planets.size()-1];
 			k=0;
 			for(Planet plo:planets){
 				if(!pl.equals(plo)){
 					//tranne che per me stesso
-					force[i][k] = new Force(calcFg(pl.getM(), plo.getM(), calcDist(pl.getX(), pl.getY(), plo.getX(), plo.getY())));
-					force[i][k].findDirX(pl.getX(), plo.getX());
-					force[i][k].findDirY(pl.getY(), plo.getY());
+					force[k] = new Force(calcFg(pl.getM(), plo.getM(), calcDist(pl.getX(), pl.getY(), plo.getX(), plo.getY())));
+					force[k].findDirX(pl.getX(), plo.getX());
+					force[k].findDirY(pl.getY(), plo.getY());
 				    k++;
 				}
 			}
-			i++;
+			pl.setForces(force);
 		}
+		while(!collision){
+			//trovo lo spostamento (2 PIANETI)
+			for(Planet pl:planets){
+				//trovo la direzione della forza che dipende dalla posizione del pianeta rispetto all'altro
+				direction = pl.getForces()[0].getDirX()+pl.getForces()[0].getDirY();
+				//calcolo accelerazione velocità e posizione iniziale
+				a = calcAcc(pl.getForces()[0].getValue(), pl.getM());
+				vi = pl.getVi();
+				vf = calcVel(vi,(double)dt,a);
+				pi = calcDist(0, 0, pl.getX(), pl.getY());
+				dp = calcdP(vi, dt, a); //spostamento
+				c = calcDistX(0, pl.getX()); //cateto triangolo (0,0,x,y)
+	    		b = calcDistY(0, pl.getY()); 
+	    		t = Math.atan2(c, b); //angolo acuto
+	    		c1 = dp*Math.sin(t); //nuovo cateto 
+	    		b1= dp*Math.cos(t);
+				switch(direction)
+				{
+				//a seconda della direzione della forza trovo la nuova posizione
+					case "++":
+			    		pl.incX((int)c1);
+			    		pl.incY((int)b1);
+					break;
+					case "--":
+						pl.incX(-(int)c1);
+			    		pl.incY(-(int)b1);
+					break;
+					case "+-":
+						pl.incX((int)c1);
+			    		pl.incY(-(int)b1);
+					break;
+					case "-+":
+						pl.incX(-(int)c1);
+			    		pl.incY((int)b1);
+					break;
+				}
+				pl.setVi(vf);
+				
+			}
+			//aggiorno le forze tra tutti i pianeti dopo il movimento (cambia r^2)
+			for(Planet pl:planets){
+				force = new Force[planets.size()-1];
+				k=0;
+				for(Planet plo:planets){
+					if(!pl.equals(plo)){
+						//tranne che per me stesso
+						force[k] = new Force(calcFg(pl.getM(), plo.getM(), calcDist(pl.getX(), pl.getY(), plo.getX(), plo.getY())));
+						force[k].findDirX(pl.getX(), plo.getX());
+						force[k].findDirY(pl.getY(), plo.getY());
+					    k++;
+					}
+				}
+				pl.setForces(force);
+			}
+			//f.validate();
+			//System.out.println(calcDist(planets.get(0).getX(), planets.get(0).getY(), planets.get(1).getX(), planets.get(1).getY()));
+			f.repaint();
+			try {
+				Thread.sleep(dt);
+			} catch (InterruptedException e) {
+				
+			}
+		}
+		
 		System.out.println("break");
 		/*System.out.println(p.calcDist());
 		System.out.println(p.calcDistX());

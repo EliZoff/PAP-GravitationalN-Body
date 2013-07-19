@@ -23,6 +23,7 @@ public class My_panel extends JPanel {
     protected void paintComponent(Graphics g) {
     	g.setColor(Color.RED);
     	for(Planet pl:listPl){
+    		
     		g.fillOval(pl.getX()-pl.getR(),pl.getY()-pl.getR(),pl.getR()*2,pl.getR()*2);
     	}
     }    
