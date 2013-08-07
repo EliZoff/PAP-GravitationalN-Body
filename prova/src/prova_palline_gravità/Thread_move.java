@@ -16,19 +16,19 @@ public class Thread_move extends Thread{
 		this.f=f;
 	}
 	
-	public double calcDist(int x1c, int y1c, int x2c, int y2c){
+	public double calcDist(double x1c, double y1c, double x2c, double y2c){
     	//calcola la distanza tra due punti attraverso il teorema di pitagora
     	double result;
     	result=Math.sqrt(Math.pow((x2c-x1c), 2) + Math.pow((y2c-y1c), 2));
     	return result;
     }
-	public double calcDistX(int x1c, int x2c){
+	public double calcDistX(double x1c, double x2c){
     	//calcola la distanza tra le coordinate x di due punti
     	double result;
     	result=Math.sqrt(Math.pow((x2c-x1c), 2));
     	return result;
     }
-    public double calcDistY(int y1c, int y2c){
+    public double calcDistY(double y1c, double y2c){
     	//calcola la distanza tra le coordinate y di due punti
     	double result;
     	result=Math.sqrt(Math.pow((y2c-y1c), 2));
@@ -80,7 +80,7 @@ public class Thread_move extends Thread{
 			Planet pl = new Planet(0,0,m[i],r[i]);
 			//genero casualmente le coordinare del centro della prima palla
 	    	
-	    	//se le coordinate genetate posizionano la palla oltre il bordo del panel le rigenero
+	    	//se le coordinate genetate posizionano la palla oltre il bordo del panel o sopra un'altra le rigenero
 	    	while(!flagOk)
 	    	{
 	    		pl.setX(rn.nextInt(b.width));
@@ -131,6 +131,17 @@ public class Thread_move extends Thread{
 		return p;
 	}
 	
+	public boolean checkCollisions(double x1, double x2, double y1, double y2, double r1, double r2) {
+		double d=calcDist(x1, y1, x2, y2);
+		double r = (r1+r2);
+        if(d<=r/*+1*/){//????
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+	
 	public void run(){
 		JOptionPane message=new JOptionPane();
 		int incY=10;
@@ -148,6 +159,8 @@ public class Thread_move extends Thread{
 		boolean collision=false; //flag collisioni
 		String direction; //direzione della forza
 		genPlanets(2, ms, rg); //generazione coordinate casuali dei pianeti
+		//planets.add(new Planet(20,300,ms[0],rg[0]));
+		//planets.add(new Planet(500,500,ms[1],rg[1]));
 		newP = new My_panel(planets); //nuovo JPanel
 		//rimuovo e aggiungo il panel per disegnare i nuovi pianeti 
 		f.remove(p);
@@ -172,6 +185,7 @@ public class Thread_move extends Thread{
 		while(!collision){
 			//trovo lo spostamento (2 PIANETI)
 			for(Planet pl:planets){
+				double tempb,tempc,tempt;
 				//trovo la direzione della forza che dipende dalla posizione del pianeta rispetto all'altro
 				direction = pl.getForces()[0].getDirX()+pl.getForces()[0].getDirY();
 				//calcolo accelerazione velocità e posizione iniziale
@@ -183,32 +197,37 @@ public class Thread_move extends Thread{
 				c = calcDistX(0, pl.getX()); //cateto triangolo (0,0,x,y)
 	    		b = calcDistY(0, pl.getY()); 
 	    		t = Math.atan2(c, b); //angolo acuto
-	    		c1 = dp*Math.sin(t); //nuovo cateto 
-	    		b1= dp*Math.cos(t);
+	    		//problema!!! calcolando la distanza tra 0 e x o y non ottengo i veri cateti e il vero angolo acuto
+	    		//questi vanno calcolati considerando la differenza tra le x e y delle coppie di pianeti!!
+	    		tempb = calcDistX(planets.get(0).getX(),planets.get(1).getX());
+	    		tempc = calcDistY(planets.get(0).getY(), planets.get(1).getY());
+	    		tempt = Math.atan2(tempc, tempb);
+	    		c1 = dp*Math.sin(tempt); //nuovo cateto 
+	    		b1= dp*Math.cos(tempt);
 				switch(direction)
 				{
 				//a seconda della direzione della forza trovo la nuova posizione
 					case "++":
-			    		pl.incX((int)c1);
-			    		pl.incY((int)b1);
+			    		pl.incX(b1);
+			    		pl.incY(c1);
 					break;
 					case "--":
-						pl.incX(-(int)c1);
-			    		pl.incY(-(int)b1);
+						pl.incX(-b1);
+			    		pl.incY(-c1);
 					break;
 					case "+-":
-						pl.incX((int)c1);
-			    		pl.incY(-(int)b1);
+						pl.incX(b1);
+			    		pl.incY(-c1);
 					break;
 					case "-+":
-						pl.incX(-(int)c1);
-			    		pl.incY((int)b1);
+						pl.incX(-b1);
+			    		pl.incY(c1);
 					break;
 				}
-				pl.setVi(vf);
+				pl.setVi(vf);//aggiorno la velocità attuale
 				
 			}
-			//aggiorno le forze tra tutti i pianeti dopo il movimento (cambia r^2)
+			
 			for(Planet pl:planets){
 				force = new Force[planets.size()-1];
 				k=0;
@@ -218,10 +237,12 @@ public class Thread_move extends Thread{
 						force[k] = new Force(calcFg(pl.getM(), plo.getM(), calcDist(pl.getX(), pl.getY(), plo.getX(), plo.getY())));
 						force[k].findDirX(pl.getX(), plo.getX());
 						force[k].findDirY(pl.getY(), plo.getY());
+						//aggiorno le forze tra tutti i pianeti dopo il movimento (cambia r^2)
+						collision = checkCollisions(pl.getX(), plo.getX(), pl.getY(), plo.getY(), pl.getR(), plo.getR());
 					    k++;
 					}
 				}
-				pl.setForces(force);
+				pl.setForces(force);//aggiorno le forze con la nuova posizione
 			}
 			//f.validate();
 			//System.out.println(calcDist(planets.get(0).getX(), planets.get(0).getY(), planets.get(1).getX(), planets.get(1).getY()));

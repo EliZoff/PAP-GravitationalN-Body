@@ -24,7 +24,7 @@ public class My_panel extends JPanel {
     	g.setColor(Color.RED);
     	for(Planet pl:listPl){
     		
-    		g.fillOval(pl.getX()-pl.getR(),pl.getY()-pl.getR(),pl.getR()*2,pl.getR()*2);
+    		g.fillOval((int)(pl.getX()-pl.getR()),(int)(pl.getY()-pl.getR()),pl.getR()*2,pl.getR()*2);
     	}
     }    
 }

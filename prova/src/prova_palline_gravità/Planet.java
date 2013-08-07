@@ -1,7 +1,7 @@
 package prova_palline_gravità;
 
 public class Planet {
-	private int x=0, y=0;
+	private double x=0, y=0;
 	private double m;
 	private int r;
 	private double p;
@@ -21,22 +21,22 @@ public class Planet {
 	public Force[] getForces(){
 		return f;
 	}
-	public int getX() {
+	public double getX() {
 		return x;
 	}
-	public void setX(int x) {
+	public void setX(double x) {
 		this.x = x;
 	}
-	public int getY() {
+	public double getY() {
 		return y;
 	}
-	public void setY(int y) {
+	public void setY(double y) {
 		this.y = y;
 	}
-	public void incX(int incX){
+	public void incX(double incX){
 		this.x+=incX;
 	}
-	public void incY(int incY){
+	public void incY(double incY){
 		this.y+=incY;
 	}
 	public double getM() {

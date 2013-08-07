@@ -12,7 +12,7 @@ public class Force {
 		this.dirY=dirY;
 	}
 	//calcola la direzione della forza sull'asse x
-	public void findDirX(int x1, int x2){
+	public void findDirX(double x1, double x2){
 		if((x1-x2)>0){
 			//se la x del primo pianeta è > della x del secondo il pianeta dovrà decrementare la propria x per avvicinarcisi
 			this.dirX="-";
@@ -20,7 +20,7 @@ public class Force {
 			this.dirX="+";
 		}
 	}
-	public void findDirY(int y1, int y2){
+	public void findDirY(double y1, double y2){
 		if((y1-y2)>0){
 			this.dirY="-";
 		}else{
