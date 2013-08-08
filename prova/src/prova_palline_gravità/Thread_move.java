@@ -144,15 +144,16 @@ public class Thread_move extends Thread{
 	
 	public void run(){
 		JOptionPane message=new JOptionPane();
-		int incY=10;
-		int incX=10;
 		int dt=50; //delta time
-		double a; // accelerazione
-		double vi=0, vf; // velocità iniziale e finale
-		double pi, dp; // posizione iniziale e spostamento
+		double a, ax, ay; // accelerazione
+		double vi, vix=0, viy, vf, vfx, vfy; // velocità iniziale e finale
+		double pi, pix, piy, dp, dpx, dpy; // posizione iniziale e spostamento
 		int[] rg = {20,70,5,30,45,5,15,80,25,10}; //array di raggi
-		double c, b, c1, b1, t; //cateti e angolo acuto
+		double c, b, c1, b1; //cateti
+		double t; //angolo acuto
 		double[] ms = {5.97E10,6.39E11,20,50,35,6,80,20,50,35}; //array di masse
+		double fx = 0, fy = 0, totFval=0;
+		String dirFx = "", dirFy = "";
 		My_panel newP;
 		Force[] force; // array di forze
 		int k=0;
@@ -177,55 +178,111 @@ public class Thread_move extends Thread{
 					force[k] = new Force(calcFg(pl.getM(), plo.getM(), calcDist(pl.getX(), pl.getY(), plo.getX(), plo.getY())));
 					force[k].findDirX(pl.getX(), plo.getX());
 					force[k].findDirY(pl.getY(), plo.getY());
+					
+					//calcolo la risultante delle forze
+					if(k == 0){
+						//se è la prima forza calcolata
+						b = calcDistX(pl.getX(),plo.getX());
+			    		c = calcDistY(pl.getY(), plo.getY());
+			    		t = Math.atan2(c, b);
+			    		//trovo le componenti x e y
+			    		force[k].setCompX(force[k].getValue()*Math.cos(t));
+			    		force[k].setCompY(force[k].getValue()*Math.sin(t));
+						fx = force[k].getCompX();
+						fy = force[k].getCompY();
+						//e indico come direzione della risultante quella della forza appena trovata
+						dirFx = force[k].getDirX();
+						dirFy = force[k].getDirY();
+					}else{
+						//se non è la prima forza
+						b = calcDistX(pl.getX(),plo.getX());
+			    		c = calcDistY(pl.getY(), plo.getY());
+			    		t = Math.atan2(c, b);
+			    		force[k].setCompX(force[k].getValue()*Math.cos(t));
+			    		force[k].setCompY(force[k].getValue()*Math.sin(t));
+			    		//calcolo la differenza tra le componenti x e y della risultante trovata fin'ora
+			    		// e della forza appena trovata
+			    		fx = fx - (force[k].getCompX());
+			    		fy = fy - (force[k].getCompY());
+			    		if(fx < 0){
+			    			//se la differenza è negativa allora la nuova forza è prevalente
+			    			//quindi la direzione sarà uguale alla forza attuale
+			    			dirFx = force[k].getDirX();
+			    			fx = -fx;
+			    		}
+			    		//altrimenti non cambia nulla
+			    		if(fy < 0){
+			    			dirFy = force[k].getDirY();
+			    			fy = -fy;
+			    		}
+					}
 				    k++;
 				}
 			}
 			pl.setForces(force);
+			//trovo il valore del modulo della risultante
+			
+			totFval = Math.sqrt(Math.pow(fx, 2)+Math.pow(fy, 2));
+			//e la imposto nell'oggetto
+			pl.setTotalForce(new Force(totFval,fx,fy,dirFx,dirFy));
 		}
 		while(!collision){
 			//trovo lo spostamento (2 PIANETI)
 			for(Planet pl:planets){
 				double tempb,tempc,tempt;
 				//trovo la direzione della forza che dipende dalla posizione del pianeta rispetto all'altro
-				direction = pl.getForces()[0].getDirX()+pl.getForces()[0].getDirY();
+				direction = pl.getTotalForces().getDirX() + pl.getTotalForces().getDirY();
+				/*direction = pl.getForces()[0].getDirX()+pl.getForces()[0].getDirY();*/
 				//calcolo accelerazione velocità e posizione iniziale
-				a = calcAcc(pl.getForces()[0].getValue(), pl.getM());
-				vi = pl.getVi();
-				vf = calcVel(vi,(double)dt,a);
-				pi = calcDist(0, 0, pl.getX(), pl.getY());
-				dp = calcdP(vi, dt, a); //spostamento
-				c = calcDistX(0, pl.getX()); //cateto triangolo (0,0,x,y)
+				
+				ax = calcAcc(pl.getTotalForces().getCompX(), pl.getM());
+				ay = calcAcc(pl.getTotalForces().getCompY(), pl.getM());
+				//a = calcAcc(pl.getTotalForces().getValue(), pl.getM());
+				a = Math.sqrt(Math.pow(ax, 2)+Math.pow(ay, 2));
+				vix = pl.getViX();
+				viy = pl.getViY();
+				vi = Math.sqrt(Math.pow(pl.getViX(), 2)+Math.pow(pl.getViY(), 2));
+				vfx = calcVel(vix, (double)dt, ax);
+				vfy = calcVel(viy, (double)dt, ay);
+				//vf = calcVel(vi, (double)dt, ax);
+				vf = Math.sqrt(Math.pow(vfx, 2)+Math.pow(vfy, 2));
+				pix = calcDistX(0, pl.getX());
+				piy = calcDistY(0, pl.getY());
+				dp = calcdP(vi, dt, a);
+				dpx = calcdP(vix, dt, ax); //spostamento
+				dpy = calcdP(viy, dt, ay);
+				/*c = calcDistX(0, pl.getX()); //cateto triangolo (0,0,x,y)
 	    		b = calcDistY(0, pl.getY()); 
-	    		t = Math.atan2(c, b); //angolo acuto
+	    		t = Math.atan2(c, b); //angolo acuto*/
 	    		//problema!!! calcolando la distanza tra 0 e x o y non ottengo i veri cateti e il vero angolo acuto
 	    		//questi vanno calcolati considerando la differenza tra le x e y delle coppie di pianeti!!
-	    		tempb = calcDistX(planets.get(0).getX(),planets.get(1).getX());
+	    		/*tempb = calcDistX(planets.get(0).getX(),planets.get(1).getX());
 	    		tempc = calcDistY(planets.get(0).getY(), planets.get(1).getY());
 	    		tempt = Math.atan2(tempc, tempb);
 	    		c1 = dp*Math.sin(tempt); //nuovo cateto 
-	    		b1= dp*Math.cos(tempt);
+	    		b1= dp*Math.cos(tempt);*/
 				switch(direction)
 				{
 				//a seconda della direzione della forza trovo la nuova posizione
 					case "++":
-			    		pl.incX(b1);
-			    		pl.incY(c1);
+			    		pl.incX(dpx);
+			    		pl.incY(dpy);
 					break;
 					case "--":
-						pl.incX(-b1);
-			    		pl.incY(-c1);
+						pl.incX(-dpx);
+			    		pl.incY(-dpy);
 					break;
 					case "+-":
-						pl.incX(b1);
-			    		pl.incY(-c1);
+						pl.incX(dpx);
+			    		pl.incY(-dpy);
 					break;
 					case "-+":
-						pl.incX(-b1);
-			    		pl.incY(c1);
+						pl.incX(-dpx);
+			    		pl.incY(dpy);
 					break;
 				}
-				pl.setVi(vf);//aggiorno la velocità attuale
-				
+				pl.setViX(vfx);//aggiorno la velocità attuale
+				pl.setViY(vfy);
 			}
 			
 			for(Planet pl:planets){
@@ -238,10 +295,52 @@ public class Thread_move extends Thread{
 						force[k].findDirX(pl.getX(), plo.getX());
 						force[k].findDirY(pl.getY(), plo.getY());
 						//aggiorno le forze tra tutti i pianeti dopo il movimento (cambia r^2)
+						
+						//calcolo la risultante delle forze aggiornate
+						if(k == 0){
+							//se è la prima forza calcolata
+							b = calcDistX(pl.getX(),plo.getX());
+				    		c = calcDistY(pl.getY(), plo.getY());
+				    		t = Math.atan2(c, b);
+				    		//trovo le componenti x e y
+				    		force[k].setCompX(force[k].getValue()*Math.cos(t));
+				    		force[k].setCompY(force[k].getValue()*Math.sin(t));
+							fx = force[k].getCompX();
+							fy = force[k].getCompY();
+							//e indico come direzione della risultante quella della forza appena trovata
+							dirFx = force[k].getDirX();
+							dirFy = force[k].getDirY();
+						}else{
+							//se non è la prima forza
+							b = calcDistX(pl.getX(),plo.getX());
+				    		c = calcDistY(pl.getY(), plo.getY());
+				    		t = Math.atan2(c, b);
+				    		force[k].setCompX(force[k].getValue()*Math.cos(t));
+				    		force[k].setCompY(force[k].getValue()*Math.sin(t));
+				    		//calcolo la differenza tra le componenti x e y della risultante trovata fin'ora
+				    		// e della forza appena trovata
+				    		fx = fx - (force[k].getCompX());
+				    		fy = fy - (force[k].getCompY());
+				    		if(fx < 0){
+				    			//se la differenza è negativa allora la nuova forza è prevalente
+				    			//quindi la direzione sarà uguale alla forza attuale
+				    			dirFx = force[k].getDirX();
+				    			fx = -fx;
+				    		}
+				    		//altrimenti non cambia nulla
+				    		if(fy < 0){
+				    			dirFy = force[k].getDirY();
+				    			fy = -fy;
+				    		}
+						}
 						collision = checkCollisions(pl.getX(), plo.getX(), pl.getY(), plo.getY(), pl.getR(), plo.getR());
 					    k++;
 					}
 				}
+				//trovo il valore del modulo della nuova risultante
+				totFval = Math.sqrt(Math.pow(fx, 2)+Math.pow(fy, 2));
+				//e la imposto nell'oggetto
+				pl.setTotalForce(new Force(totFval,fx,fy,dirFx,dirFy));
 				pl.setForces(force);//aggiorno le forze con la nuova posizione
 			}
 			//f.validate();
