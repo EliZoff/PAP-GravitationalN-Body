@@ -5,6 +5,8 @@ import java.util.*;
 
 import javax.swing.*;
 
+import utils.Planet;
+
 public class My_panel extends JPanel {
 	
 			

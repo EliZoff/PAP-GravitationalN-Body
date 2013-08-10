@@ -1,4 +1,4 @@
-package prova_palline_gravità;
+package utils;
 
 public class Force {
 	private double val;

@@ -1,6 +1,7 @@
 package prova_movimento_pallina;
 
 import java.awt.*;
+
 import javax.swing.*;
 
 public class Frame extends JFrame{
@@ -8,9 +9,11 @@ public class Frame extends JFrame{
 	public Frame(){
 		super();
 		Container c=getContentPane();
+		Box b = new Box(BoxLayout.X_AXIS);
 		p = new My_panel();
+		b.add(p);
 		setSize(300, 300);
-		c.add(p);       
+		c.add(b);       
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
