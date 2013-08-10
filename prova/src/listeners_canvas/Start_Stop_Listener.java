@@ -8,16 +8,18 @@ import javax.swing.*;
 public class Start_Stop_Listener implements ActionListener{
 
 	Thread_move th;
-	JButton start;
 	
-	public Start_Stop_Listener(JButton start, Thread_move th){
+	public Start_Stop_Listener(Thread_move th){
 		this.th = th;
-		this.start = start;
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()==start){
+		if(((JButton)e.getSource()).getText().equals("Start")){
+			((JButton)e.getSource()).setText("Stop");
 			th.startMove();
+		}else{
+			((JButton)e.getSource()).setText("Start");
+			th.stopMove();
 		}
 		
 	}

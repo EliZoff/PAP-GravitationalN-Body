@@ -1,7 +1,6 @@
 package prova_gravità_canvas;
 
 import java.awt.*;
-import java.util.concurrent.Semaphore;
 import javax.swing.*;
 import listeners_canvas.*;
 
@@ -16,7 +15,6 @@ public class Frame extends JFrame{
 		JButton start;
 		JPanel panel;
 		Canvas drawer;
-		Semaphore startMove;
 		
 		setSize(1130, 730);
 		
@@ -56,7 +54,7 @@ public class Frame extends JFrame{
 		th.setGraphicComponents(this, /*panel,*/ boxDrawer);
 		
 		//aggancio i listeners ai bottoni
-		Start_Stop_Listener SSL=new Start_Stop_Listener(start,th);
+		Start_Stop_Listener SSL=new Start_Stop_Listener(th);
 		Regenerate_Listener RL = new Regenerate_Listener(regenerate, start, th);
 		start.addActionListener(SSL);
 		regenerate.addActionListener(RL);
