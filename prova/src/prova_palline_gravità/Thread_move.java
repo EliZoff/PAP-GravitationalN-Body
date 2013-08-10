@@ -158,8 +158,7 @@ public class Thread_move extends Thread {
 		return p;
 	}
 
-	public boolean checkCollisions(double x1, double x2, double y1, double y2,
-			double r1, double r2) {
+	public boolean checkCollisions(double x1, double x2, double y1, double y2, double r1, double r2) {
 		// controllo se sono avvenute collisioni
 		double d = calcDist(x1, y1, x2, y2);
 		double r = (r1 + r2);
