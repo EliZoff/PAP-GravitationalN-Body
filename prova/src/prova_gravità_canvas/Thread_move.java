@@ -2,6 +2,7 @@ package prova_gravità_canvas;
 
 import java.awt.*;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 
 import javax.swing.*;
 
@@ -9,17 +10,20 @@ import utils.Force;
 import utils.Planet;
 
 public class Thread_move extends Thread {
-	static final double G = 6.67E-11;
+	private static final double G = 6.67E-11;
 	private JFrame f;
 	private Canvas drawer;
 	//private JPanel panel;
 	private Box boxDrawer;
 	private ArrayList<Planet> planets;
-	boolean restart;
+	private boolean restart;
+	private Semaphore startMove;
+	
 
 	public Thread_move() {
 		restart = false;
 		planets = new ArrayList<Planet>();
+		startMove = new Semaphore(0);
 	}
 
 	public void setGraphicComponents(JFrame f, /* JPanel panel, */Box boxDrawer) {
@@ -30,6 +34,10 @@ public class Thread_move extends Thread {
 
 	public void setDrawer(Canvas drawer) {
 		this.drawer = drawer;
+	}
+	
+	public void startMove(){
+		this.startMove.release();
 	}
 
 	public double calcDist(double x1c, double y1c, double x2c, double y2c) {
@@ -192,34 +200,154 @@ public class Thread_move extends Thread {
 		 * genPlanets(3, ms, rg); //generazione coordinate casuali dei pianeti
 		 */
 		while (true) {
-			if (restart) {//USARE UN SEMAFORO
-				collision = false;
-				// calcolo la forza iniziale tra tutti i pianeti
+			try {
+				startMove.acquire();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			collision = false;
+			// calcolo la forza iniziale tra tutti i pianeti
+			for (Planet pl : planets) {
+				force = new Force[planets.size() - 1];
+				k = 0;
+				for (Planet plo : planets) {
+					if (!pl.equals(plo)) {
+						// tranne che per me stesso
+						force[k] = new Force(calcFg(
+								pl.getM(),
+								plo.getM(),
+								calcDist(pl.getX(), pl.getY(), plo.getX(),
+										plo.getY())));
+						force[k].findDirX(pl.getX(), plo.getX());
+						force[k].findDirY(pl.getY(), plo.getY());
+
+						// calcolo la risultante delle forze
+						if (k == 0) {
+							// se è la prima forza calcolata
+							b = calcDistX(pl.getX(), plo.getX());
+							c = calcDistY(pl.getY(), plo.getY());
+							t = Math.atan2(c, b);
+							// trovo le componenti x e y
+							force[k].setCompX(force[k].getValue()
+									* Math.cos(t));
+							force[k].setCompY(force[k].getValue()
+									* Math.sin(t));
+							fx = force[k].getCompX();
+							fy = force[k].getCompY();
+							// e indico come direzione della risultante
+							// quella della forza appena trovata
+							dirFx = force[k].getDirX();
+							dirFy = force[k].getDirY();
+						} else {
+							// se non è la prima forza
+							b = calcDistX(pl.getX(), plo.getX());
+							c = calcDistY(pl.getY(), plo.getY());
+							t = Math.atan2(c, b);
+							force[k].setCompX(force[k].getValue()*Math.cos(t));
+							force[k].setCompY(force[k].getValue()*Math.sin(t));
+							// calcolo la differenza tra le componenti x e y
+							// della risultante trovata fin'ora
+							// e della forza appena trovata
+							fx = fx - (force[k].getCompX());
+							fy = fy - (force[k].getCompY());
+							if (fx < 0) {
+								// se la differenza è negativa allora la
+								// nuova forza è prevalente
+								// quindi la direzione sarà uguale alla
+								// forza attuale
+								dirFx = force[k].getDirX();
+								fx = -fx;
+							}
+							// altrimenti non cambia nulla
+							if (fy < 0) {
+								dirFy = force[k].getDirY();
+								fy = -fy;
+							}
+						}
+						k++;
+					}
+				}
+				pl.setForces(force);
+				// trovo il valore del modulo della risultante
+
+				totFval = Math.sqrt(Math.pow(fx, 2) + Math.pow(fy, 2));
+				// e la imposto nell'oggetto
+				pl.setTotalForce(new Force(totFval, fx, fy, dirFx, dirFy));
+			}
+			while (!collision) {
+				// trovo lo spostamento (2 PIANETI)
+				for (Planet pl : planets) {
+					// trovo la direzione della forza risultante che dipende
+					// dalla posizione del pianeta rispetto agli altri
+					direction = pl.getTotalForces().getDirX() + pl.getTotalForces().getDirY();
+
+					// calcolo le due componenti dell'accelerazione e
+					// velocità
+					// attreaverso le componenti della forza risultante
+					ax = calcAcc(pl.getTotalForces().getCompX(), pl.getM());
+					ay = calcAcc(pl.getTotalForces().getCompY(), pl.getM());
+
+					// la velocità attuale è una proprietà del pianeta
+					vix = pl.getViX();
+					viy = pl.getViY();
+
+					vfx = calcVel(vix, (double) dt, ax);
+					vfy = calcVel(viy, (double) dt, ay);
+
+					// posizione attuale
+					pix = calcDistX(0, pl.getX());
+					piy = calcDistY(0, pl.getY());
+
+					// calcolo le componenti dello spostameto
+					dpx = calcdP(vix, dt, ax);
+					dpy = calcdP(viy, dt, ay);
+
+					switch (direction) {// a seconda della direzione della
+										// forza trovo la nuova posizione
+					case "++":
+						pl.incX(dpx);
+						pl.incY(dpy);
+						break;
+					case "--":
+						pl.incX(-dpx);
+						pl.incY(-dpy);
+						break;
+					case "+-":
+						pl.incX(dpx);
+						pl.incY(-dpy);
+						break;
+					case "-+":
+						pl.incX(-dpx);
+						pl.incY(dpy);
+						break;
+					}
+					// aggiorno la velocità attuale
+					pl.setViX(vfx);
+					pl.setViY(vfy);
+				}
+				// calcolo le nuove forze dopo lo spostamento e la
+				// risultante
 				for (Planet pl : planets) {
 					force = new Force[planets.size() - 1];
 					k = 0;
 					for (Planet plo : planets) {
 						if (!pl.equals(plo)) {
 							// tranne che per me stesso
-							force[k] = new Force(calcFg(
-									pl.getM(),
-									plo.getM(),
-									calcDist(pl.getX(), pl.getY(), plo.getX(),
-											plo.getY())));
+							force[k] = new Force( calcFg(pl.getM(), plo.getM(), calcDist(pl.getX(), pl.getY(), plo.getX(), plo.getY())));
 							force[k].findDirX(pl.getX(), plo.getX());
 							force[k].findDirY(pl.getY(), plo.getY());
+							// aggiorno le forze tra tutti i pianeti dopo il
+							// movimento (cambia r^2)
 
-							// calcolo la risultante delle forze
+							// calcolo la risultante delle forze aggiornate
 							if (k == 0) {
 								// se è la prima forza calcolata
 								b = calcDistX(pl.getX(), plo.getX());
 								c = calcDistY(pl.getY(), plo.getY());
 								t = Math.atan2(c, b);
 								// trovo le componenti x e y
-								force[k].setCompX(force[k].getValue()
-										* Math.cos(t));
-								force[k].setCompY(force[k].getValue()
-										* Math.sin(t));
+								force[k].setCompX(force[k].getValue()*Math.cos(t));
+								force[k].setCompY(force[k].getValue()*Math.sin(t));
 								fx = force[k].getCompX();
 								fy = force[k].getCompY();
 								// e indico come direzione della risultante
@@ -233,8 +361,8 @@ public class Thread_move extends Thread {
 								t = Math.atan2(c, b);
 								force[k].setCompX(force[k].getValue()*Math.cos(t));
 								force[k].setCompY(force[k].getValue()*Math.sin(t));
-								// calcolo la differenza tra le componenti x e y
-								// della risultante trovata fin'ora
+								// calcolo la differenza tra le componenti x
+								// e y della risultante trovata fin'ora
 								// e della forza appena trovata
 								fx = fx - (force[k].getCompX());
 								fy = fy - (force[k].getCompY());
@@ -252,147 +380,30 @@ public class Thread_move extends Thread {
 									fy = -fy;
 								}
 							}
+							if (!collision) {
+								collision = checkCollisions(pl.getX(), plo.getX(), pl.getY(), plo.getY(), pl.getR(), plo.getR());
+							}
 							k++;
 						}
 					}
-					pl.setForces(force);
-					// trovo il valore del modulo della risultante
-
+					// trovo il valore del modulo della nuova risultante
 					totFval = Math.sqrt(Math.pow(fx, 2) + Math.pow(fy, 2));
 					// e la imposto nell'oggetto
 					pl.setTotalForce(new Force(totFval, fx, fy, dirFx, dirFy));
+					// aggiorno le forze con la nuova posizione
+					pl.setForces(force);
 				}
-				while (!collision) {
-					// trovo lo spostamento (2 PIANETI)
-					for (Planet pl : planets) {
-						// trovo la direzione della forza risultante che dipende
-						// dalla posizione del pianeta rispetto agli altri
-						direction = pl.getTotalForces().getDirX() + pl.getTotalForces().getDirY();
+				// ridisegno i pianeti con le nuove posizioni
+				drawer.repaint();
+				try {
+					Thread.sleep(dt);
+				} catch (InterruptedException e) {
 
-						// calcolo le due componenti dell'accelerazione e
-						// velocità
-						// attreaverso le componenti della forza risultante
-						ax = calcAcc(pl.getTotalForces().getCompX(), pl.getM());
-						ay = calcAcc(pl.getTotalForces().getCompY(), pl.getM());
-
-						// la velocità attuale è una proprietà del pianeta
-						vix = pl.getViX();
-						viy = pl.getViY();
-
-						vfx = calcVel(vix, (double) dt, ax);
-						vfy = calcVel(viy, (double) dt, ay);
-
-						// posizione attuale
-						pix = calcDistX(0, pl.getX());
-						piy = calcDistY(0, pl.getY());
-
-						// calcolo le componenti dello spostameto
-						dpx = calcdP(vix, dt, ax);
-						dpy = calcdP(viy, dt, ay);
-
-						switch (direction) {// a seconda della direzione della
-											// forza trovo la nuova posizione
-						case "++":
-							pl.incX(dpx);
-							pl.incY(dpy);
-							break;
-						case "--":
-							pl.incX(-dpx);
-							pl.incY(-dpy);
-							break;
-						case "+-":
-							pl.incX(dpx);
-							pl.incY(-dpy);
-							break;
-						case "-+":
-							pl.incX(-dpx);
-							pl.incY(dpy);
-							break;
-						}
-						// aggiorno la velocità attuale
-						pl.setViX(vfx);
-						pl.setViY(vfy);
-					}
-					// calcolo le nuove forze dopo lo spostamento e la
-					// risultante
-					for (Planet pl : planets) {
-						force = new Force[planets.size() - 1];
-						k = 0;
-						for (Planet plo : planets) {
-							if (!pl.equals(plo)) {
-								// tranne che per me stesso
-								force[k] = new Force( calcFg(pl.getM(), plo.getM(), calcDist(pl.getX(), pl.getY(), plo.getX(), plo.getY())));
-								force[k].findDirX(pl.getX(), plo.getX());
-								force[k].findDirY(pl.getY(), plo.getY());
-								// aggiorno le forze tra tutti i pianeti dopo il
-								// movimento (cambia r^2)
-
-								// calcolo la risultante delle forze aggiornate
-								if (k == 0) {
-									// se è la prima forza calcolata
-									b = calcDistX(pl.getX(), plo.getX());
-									c = calcDistY(pl.getY(), plo.getY());
-									t = Math.atan2(c, b);
-									// trovo le componenti x e y
-									force[k].setCompX(force[k].getValue()*Math.cos(t));
-									force[k].setCompY(force[k].getValue()*Math.sin(t));
-									fx = force[k].getCompX();
-									fy = force[k].getCompY();
-									// e indico come direzione della risultante
-									// quella della forza appena trovata
-									dirFx = force[k].getDirX();
-									dirFy = force[k].getDirY();
-								} else {
-									// se non è la prima forza
-									b = calcDistX(pl.getX(), plo.getX());
-									c = calcDistY(pl.getY(), plo.getY());
-									t = Math.atan2(c, b);
-									force[k].setCompX(force[k].getValue()*Math.cos(t));
-									force[k].setCompY(force[k].getValue()*Math.sin(t));
-									// calcolo la differenza tra le componenti x
-									// e y della risultante trovata fin'ora
-									// e della forza appena trovata
-									fx = fx - (force[k].getCompX());
-									fy = fy - (force[k].getCompY());
-									if (fx < 0) {
-										// se la differenza è negativa allora la
-										// nuova forza è prevalente
-										// quindi la direzione sarà uguale alla
-										// forza attuale
-										dirFx = force[k].getDirX();
-										fx = -fx;
-									}
-									// altrimenti non cambia nulla
-									if (fy < 0) {
-										dirFy = force[k].getDirY();
-										fy = -fy;
-									}
-								}
-								if (!collision) {
-									collision = checkCollisions(pl.getX(), plo.getX(), pl.getY(), plo.getY(), pl.getR(), plo.getR());
-								}
-								k++;
-							}
-						}
-						// trovo il valore del modulo della nuova risultante
-						totFval = Math.sqrt(Math.pow(fx, 2) + Math.pow(fy, 2));
-						// e la imposto nell'oggetto
-						pl.setTotalForce(new Force(totFval, fx, fy, dirFx, dirFy));
-						// aggiorno le forze con la nuova posizione
-						pl.setForces(force);
-					}
-					// ridisegno i pianeti con le nuove posizioni
-					drawer.repaint();
-					try {
-						Thread.sleep(dt);
-					} catch (InterruptedException e) {
-
-					}
 				}
-
-				System.out.println("collisione");
-				restart = false;
 			}
+
+			System.out.println("collisione");
+			restart = false;
 			System.out.println("??");
 		}
 

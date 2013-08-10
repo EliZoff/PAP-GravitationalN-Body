@@ -17,7 +17,7 @@ public class Start_Stop_Listener implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource()==start){
-			th.startThread();
+			th.startMove();
 		}
 		
 	}

@@ -1,6 +1,7 @@
 package prova_gravità_canvas;
 
 import java.awt.*;
+import java.util.concurrent.Semaphore;
 import javax.swing.*;
 import listeners_canvas.*;
 
@@ -15,6 +16,7 @@ public class Frame extends JFrame{
 		JButton start;
 		JPanel panel;
 		Canvas drawer;
+		Semaphore startMove;
 		
 		setSize(1130, 730);
 		
