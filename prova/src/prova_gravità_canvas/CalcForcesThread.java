@@ -9,14 +9,17 @@ public class CalcForcesThread implements Runnable{
 	private Planet pl;
 	private Utility util;
 	private static final double G = 6.67E-11;
+	private Thread_move tm;
 	
-	public CalcForcesThread(Planet pl, ArrayList<Planet> listPl){
+	public CalcForcesThread(Planet pl, ArrayList<Planet> listPl, Thread_move tm){
 		this.pl = pl;
 		this.listPl = listPl;
 		util = new Utility();
+		this.tm = tm;
 	}
 	public void run() {
 		calcForces();
+		tm.signalCalcForceEnd();
 	}
 	
 	private void calcForces(){

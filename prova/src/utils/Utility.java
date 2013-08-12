@@ -45,7 +45,8 @@ public class Utility {
 		int[] r = new int[nPl];
 		Random rn = new Random(System.nanoTime());
 		for (int i = 0; i < nPl; i++) {
-			r[i] = rn.nextInt(99) + 1;
+			r[i] = 5;
+			//r[i] = rn.nextInt(99) + 1;
 		}
 		return r;
 	}

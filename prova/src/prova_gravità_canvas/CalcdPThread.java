@@ -7,17 +7,19 @@ public class CalcdPThread implements Runnable{
 	private Utility util;
 	private Planet pl;
 	private int dt;
+	private Thread_move tm;
 	
-	public CalcdPThread(Planet pl, int dt){
+	public CalcdPThread(Planet pl, int dt, Thread_move tm){
 		this.pl = pl;
 		this.dt = dt;
 		util = new Utility();
+		this.tm = tm;
 	}
 	
 	@Override
 	public void run() {
 		calcdP();
-		
+		tm.signalCalcDpEnd();
 	}
 	
 	

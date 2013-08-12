@@ -16,7 +16,7 @@ public class Thread_move extends Thread {
 	//private JPanel panel;
 	private Box boxDrawer;
 	private ArrayList<Planet> planets;
-	private Semaphore startMove;
+	private Semaphore startMove, calcForceEnd, calcDpEnd;
 	private boolean stop;
 	private Utility util;
 	
@@ -24,6 +24,8 @@ public class Thread_move extends Thread {
 	public Thread_move() {
 		planets = new ArrayList<Planet>();
 		startMove = new Semaphore(0);
+		calcForceEnd = new Semaphore(0);
+		calcDpEnd = new Semaphore(0);
 		stop = false;
 		util = new Utility();
 	}
@@ -41,10 +43,18 @@ public class Thread_move extends Thread {
 	public void startMove(){
 		this.startMove.release();
 	}
+	
 	public void stopMove(){
 		this.stop = true;
 	}
-
+	
+	public void signalCalcForceEnd(){
+		this.calcForceEnd.release();
+	}
+	
+	public void signalCalcDpEnd(){
+		this.calcDpEnd.release();
+	}
 
 
 	
@@ -137,14 +147,7 @@ public class Thread_move extends Thread {
 			}
 			collision = false;
 
-			executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-			for(Planet pl:planets){
-				CalcForcesThread cf = new CalcForcesThread(pl, planets);
-				executorService.execute(cf);
-			}
-			executorService.shutdown();
-			while(!executorService.isTerminated()){}
-			System.out.println("Forces calculated");
+			
 			
 			
 			
@@ -157,27 +160,35 @@ public class Thread_move extends Thread {
 						e.printStackTrace();
 					}
 				}
-				// trovo lo spostamento (2 PIANETI)
-					
+				
+				// calcolo le nuove forze dopo lo spostamento e la
+				// risultante
 				executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 				for(Planet pl:planets){
-					CalcForcesThread cf = new CalcForcesThread(pl, planets);
+					CalcForcesThread cf = new CalcForcesThread(pl, planets, this);
 					executorService.execute(cf);
 				}
 				executorService.shutdown();
-				while(!executorService.isTerminated()){}
+				try {
+					calcForceEnd.acquire(this.planets.size());
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
 				System.out.println("Forces calculated");
-					
-				// calcolo le nuove forze dopo lo spostamento e la
-				// risultante
 				
+				
+				// trovo lo spostamento (3 PIANETI)
 				executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 				for(Planet pl:planets){
-					CalcdPThread cdP = new CalcdPThread(pl, dt);
+					CalcdPThread cdP = new CalcdPThread(pl, dt, this);
 					executorService.execute(cdP);
 				}
 				executorService.shutdown();
-				while(!executorService.isTerminated()){}
+				try {
+					this.calcDpEnd.acquire(this.planets.size());
+				} catch (InterruptedException e2) {
+					e2.printStackTrace();
+				}
 				System.out.println("Move done");
 				
 				
