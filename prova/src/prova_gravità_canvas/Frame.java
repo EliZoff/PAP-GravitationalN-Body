@@ -38,7 +38,7 @@ public class Frame extends JFrame{
 		
 		boxButtons.add(start);
 		start.setEnabled(false);
-		//buttons.add(Box.createVerticalStrut(50));
+		boxButtons.add(Box.createVerticalStrut(50));
 		boxButtons.add(regenerate);
 		
 		boxTotal.add(boxDrawer);

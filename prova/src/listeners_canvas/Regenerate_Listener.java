@@ -24,12 +24,13 @@ public class Regenerate_Listener  implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		int[] r;
 		double[] m;
+		int nPlanets = 10;
 		if(e.getSource()==regenerate){
 			regenerate.setText("Re-Generate");
 			start.setEnabled(true);
-			r = util.genRadius(3);
-			m = util.genMass(3);
-			th.genPlanets(3, m, r);
+			r = util.genRadius(nPlanets);
+			m = util.genMass(nPlanets);
+			th.genPlanets(nPlanets, m, r);
 		}
 	}
 
